@@ -95,7 +95,7 @@ CNN From Scratch    EfficientNetB0
 
 **Mouazzam Raza**
 
-GitHub: **@mouazamkhan31-lang**
+GitHub: **@mouazamkhan31-lang/PROJECT_7_Image_Classification
 
 ---
 
