@@ -88,3 +88,17 @@ CNN From Scratch    EfficientNetB0
         ▼       ▼        ▼
     Streamlit Flask   TensorFlow
        App     API       Lite
+
+       ---
+
+## 👨‍💻 Author
+
+**Mouazzam Raza**
+
+GitHub: **@mouazamkhan31-lang**
+
+---
+
+## 📄 License
+
+This project was developed for educational and academic purposes.
