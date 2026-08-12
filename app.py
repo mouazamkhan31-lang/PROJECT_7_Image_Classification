@@ -1,14 +1,14 @@
 import streamlit as st
-import tensorflow as tf
 import numpy as np
 from PIL import Image
+from ai_edge_litert.interpreter import Interpreter
 
 
 # ==========================================================
 # CONFIGURATION
 # ==========================================================
 
-MODEL_PATH = "models/saved/efficientnet_finetuned.keras"
+MODEL_PATH = "deployment/efficientnetb0_model.tflite"
 
 CLASS_NAMES = [
     "airplane",
@@ -36,21 +36,25 @@ st.set_page_config(
 
 
 # ==========================================================
-# LOAD MODEL
+# LOAD TFLITE MODEL
 # ==========================================================
 
 @st.cache_resource
 def load_model():
 
-    model = tf.keras.models.load_model(
-        MODEL_PATH,
-        safe_mode=False
+    interpreter = Interpreter(
+        model_path=MODEL_PATH
     )
 
-    return model
+    interpreter.allocate_tensors()
+
+    return interpreter
 
 
-model = load_model()
+interpreter = load_model()
+
+input_details = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
 
 
 # ==========================================================
@@ -67,9 +71,9 @@ st.subheader(
 
 st.markdown(
     """
-Upload an image and the trained EfficientNetB0 model
-will classify it into one of the CIFAR-10 categories.
-"""
+    Upload an image and the trained EfficientNetB0
+    model will classify it into one of the CIFAR-10 categories.
+    """
 )
 
 
@@ -143,24 +147,24 @@ if uploaded_file is not None:
     # ------------------------------------------------------
 
     image_array = np.array(
-        image
+        image,
+        dtype=np.float32
     )
 
-    image_array = tf.image.resize(
-        image_array,
-        (32, 32)
-    )
-
-    image_array = tf.cast(
-        image_array,
-        tf.float32
+    image_array = np.array(
+        Image.fromarray(
+            image_array.astype(np.uint8)
+        ).resize(
+            (32, 32)
+        ),
+        dtype=np.float32
     )
 
     image_array = (
         image_array / 255.0
     )
 
-    image_array = tf.expand_dims(
+    image_array = np.expand_dims(
         image_array,
         axis=0
     )
@@ -174,9 +178,15 @@ if uploaded_file is not None:
         "🤖 Analyzing image..."
     ):
 
-        predictions = model.predict(
-            image_array,
-            verbose=0
+        interpreter.set_tensor(
+            input_details[0]["index"],
+            image_array
+        )
+
+        interpreter.invoke()
+
+        predictions = interpreter.get_tensor(
+            output_details[0]["index"]
         )[0]
 
 
@@ -275,10 +285,6 @@ if uploaded_file is not None:
             )
 
 
-# ==========================================================
-# INFORMATION
-# ==========================================================
-
 else:
 
     st.info(
@@ -286,9 +292,13 @@ else:
     )
 
 
+# ==========================================================
+# FOOTER
+# ==========================================================
+
 st.markdown("---")
 
 st.caption(
-    "Advanced Image Classification and Object Recognition System "
-    "using CNN & EfficientNetB0"
+    "Advanced Image Classification and Object Recognition "
+    "System using CNN & EfficientNetB0"
 )
